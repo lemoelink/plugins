@@ -29,7 +29,7 @@ Plugin filenames must contain only letters, numbers, hyphens and underscores (`^
 
 ## Documentation
 
-- [Plugin system documentation (EN)](https://lemoe.lemoelink.com/en/avanzado/plugins)
-- [Plugin system documentation (ES)](https://lemoe.lemoelink.com/avanzado/plugins)
-- [image_router plugin (EN)](https://lemoe.lemoelink.com/en/avanzado/plugin-image-router)
-- [image_router plugin (ES)](https://lemoe.lemoelink.com/avanzado/plugin-image-router)
+- [Plugin system documentation (EN)](https://docs.lemoe.link/en/avanzado/plugins)
+- [Plugin system documentation (ES)](https://docs.lemoe.link/avanzado/plugins)
+- [image_router plugin (EN)](https://docs.lemoe.link/en/avanzado/plugin-image-router)
+- [image_router plugin (ES)](https://docs.lemoe.link/avanzado/plugin-image-router)
