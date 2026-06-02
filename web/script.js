@@ -185,6 +185,26 @@ document.addEventListener('DOMContentLoaded', () => {
             .join(' ');
     }
 
+    // Lightweight, clean regex-based syntax highlighter for Python code
+    function highlightPython(code) {
+        // Escape HTML tags to prevent XSS/injection
+        let escaped = code
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+            
+        // Highlight Comments (# comment)
+        escaped = escaped.replace(/(#.*)/g, '<span class="code-comment">$1</span>');
+        
+        // Highlight Keywords (def, class, import, return, if, etc.)
+        escaped = escaped.replace(/\b(def|class|return|if|else|elif|for|in|while|import|from|as|try|except|raise|not|is|and|or|None|True|False)\b/g, '<span class="code-keyword">$1</span>');
+        
+        // Highlight Strings ('string' or "string")
+        escaped = escaped.replace(/(".*?"|'.*?')/g, '<span class="code-string">$1</span>');
+        
+        return escaped;
+    }
+
     // Render the grid cards as tabular rows based on search filters
     function renderPlugins() {
         // Clear loader
@@ -239,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="code-inspector-panel" id="panel-${plugin.filename.replace('.', '-')}">
                     <div class="code-inspector-header">
                         <div class="code-title">
-                            <i class="fa-brands fa-python" style="color: #ffd43b;"></i>
+                            <i class="fa-regular fa-file-code" style="color: var(--text-secondary);"></i>
                             <span>${plugin.filename}</span>
                         </div>
                         <button class="code-copy-btn" data-target="panel-${plugin.filename.replace('.', '-')}">
@@ -290,16 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!response.ok) throw new Error('Code fetch failed');
                             const pythonText = await response.text();
                             codeCache[filename] = pythonText;
-                            codeBox.textContent = pythonText;
+                            codeBox.innerHTML = highlightPython(pythonText);
                         } catch (err) {
                             console.error('Failed to load plugin code', err);
-                            codeBox.textContent = lang === 'en' 
-                                ? `# Error loading source code from GitHub.\n# You can view it directly here:\n# ${rawUrl}`
-                                : `# Error al cargar el código fuente desde GitHub.\n# Puedes visualizarlo directamente en este enlace:\n# ${rawUrl}`;
+                            codeBox.innerHTML = lang === 'en' 
+                                ? `<span class="code-comment"># Error loading source code from GitHub.\n# You can view it directly here:\n# ${rawUrl}</span>`
+                                : `<span class="code-comment"># Error al cargar el código fuente desde GitHub.\n# Puedes visualizarlo directamente en este enlace:\n# ${rawUrl}</span>`;
                         }
                     } else {
                         // Load from memory cache
-                        codeBox.textContent = codeCache[filename];
+                        codeBox.innerHTML = highlightPython(codeCache[filename]);
                     }
                 }
             });
