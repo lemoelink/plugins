@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEMoE - En Construcción</title>
+    <style>
+        /* Variables globales con paleta oscura de LEMoE */
+        :root {
+            --bg-color: #09090b;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-cyan: #06b6d4;
+            --border-color: #222226;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Reseteo basico */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Contenedor principal centrado */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* Cuadricula de fondo sutil sin glassmorphism */
+        .bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(var(--border-color) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.15;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Bloque de contenido optimizado y minimalista */
+        .content {
+            position: relative;
+            z-index: 2;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Identidad del proyecto */
+        .brand {
+            margin-bottom: 16px;
+        }
+
+        .logo-title {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            color: var(--text-primary);
+        }
+
+        /* Estado de construccion */
+        .info-box {
+            margin-bottom: 40px;
+        }
+
+        .info-box h1 {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Boton de navegacion solido */
+        .btn-home {
+            display: inline-block;
+            background-color: #16161a;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-home:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background-color: #111827;
+        }
+
+        /* Pie de pagina simplificado */
+        footer {
+            margin-top: auto;
+            color: var(--text-secondary);
+            font-size: 11px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cuadricula sutil de fondo -->
+    <div class="bg-grid"></div>
+
+    <!-- Bloque de contenido principal -->
+    <div class="content">
+        
+        <!-- Cabecera con el nombre del proyecto -->
+        <div class="brand">
+            <div class="logo-title">LEMoE</div>
+        </div>
+
+        <!-- Indicacion de construccion sin parrafos explicativos -->
+        <div class="info-box">
+            <h1>Página en construcción</h1>
+        </div>
+
+        <!-- Enlace de retorno al inicio -->
+        <div>
+            <a href="https://lemoe.link/" class="btn-home">Volver al inicio</a>
+        </div>
+
+    </div>
+
+    <!-- Pie de pagina -->
+    <footer>
+        <p>LEMoE. Desarrollado para la eficiencia. Construido para el futuro.</p>
+    </footer>
+
+</body>
+</html>
