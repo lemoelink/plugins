@@ -38,4 +38,3 @@
     "setup_es": "1. Descarga `user_profile.py` y mételo en la carpeta `plugins/`.\n2. Configura tus datos en `config.json` bajo la sección `user_profile`.\n3. Reinicia LeMoE.",
     "setup_en": "1. Download `user_profile.py` and place it inside your `plugins/` folder.\n2. Setup your profile details in `config.json` under the `user_profile` block.\n3. Restart LeMoE."
   }
-}
