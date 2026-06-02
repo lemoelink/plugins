@@ -1,25 +1,5 @@
-{
-  "image_router.py": {
-    "name_es": "Enrutador de Imágenes (Vision)",
-    "name_en": "Image Router (Vision)",
-    "category": "routing",
-    "icon": "fa-solid fa-eye",
-    "description_es": "Detecta si el usuario ha enviado una imagen en la conversación y fuerza la redirección al experto de visión (image-expert).",
-    "description_en": "Detects if a user has sent an image in the prompt and automatically routes the query to your vision expert (image-expert).",
-    "features_es": [
-      "Inspecciona imágenes en Base64 (data-URIs) y enlaces HTTP/HTTPS.",
-      "Valida formatos y emite alertas de tamaño para no sobrecargar el modelo.",
-      "Fuerza el enrutamiento al instante sin configuraciones complejas."
-    ],
-    "features_en": [
-      "Inspects Base64 images (data-URIs) and HTTP/HTTPS links.",
-      "Validates image payloads to protect your backend model from crashing.",
-      "Instantly routes to your vision expert without extra settings."
-    ],
-    "setup_es": "1. Descarga `image_router.py` y mételo en la carpeta `plugins/`.\n2. Configura un experto llamado `image-expert` en tu `experts.json`.\n3. Reinicia LeMoE.",
-    "setup_en": "1. Download `image_router.py` and place it inside your `plugins/` folder.\n2. Ensure you have an expert named `image-expert` in your `experts.json`.\n3. Restart LeMoE."
-  },
-  "system_time.py": {
+}
+"system_time.py": {
     "name_es": "Hora del Sistema",
     "name_en": "System Time Injector",
     "category": "context",
