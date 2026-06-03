@@ -1,3 +1,4 @@
+import re
 import datetime
 import os
 from modules.logger import app_logger
@@ -6,10 +7,37 @@ from modules.config_manager import ConfigManager
 # Formato por defecto para la inyección de la fecha y hora
 DEFAULT_FORMAT = "%A, %B %d, %Y, %H:%M:%S"
 
+# Seguridad: límite de longitud y caracteres prohibidos en el formato personalizado
+_MAX_FORMAT_LEN = 100
+_CONTROL_CHARS_RE = re.compile(r'[\x00-\x08\x0a-\x1f\x7f]')  # control excepto \t
+
+
 def _get_format() -> str:
-    """Carga el formato de fecha personalizado desde ConfigManager o usa el por defecto."""
+    """Carga el formato de fecha personalizado desde ConfigManager o usa el por defecto.
+
+    Valida que el formato no supere la longitud máxima permitida y no contenga
+    caracteres de control que pudieran malformar el mensaje de sistema del LLM.
+    """
     cfg = ConfigManager().get("system_time", {})
-    return cfg.get("format", DEFAULT_FORMAT)
+    fmt = cfg.get("format", DEFAULT_FORMAT)
+
+    if not isinstance(fmt, str) or len(fmt) > _MAX_FORMAT_LEN:
+        app_logger.warning(
+            f"system_time: formato de fecha inválido o demasiado largo "
+            f"({len(fmt) if isinstance(fmt, str) else type(fmt).__name__} chars), "
+            f"usando formato por defecto."
+        )
+        return DEFAULT_FORMAT
+
+    if _CONTROL_CHARS_RE.search(fmt):
+        app_logger.warning(
+            "system_time: formato de fecha contiene caracteres de control, "
+            "usando formato por defecto."
+        )
+        return DEFAULT_FORMAT
+
+    return fmt
+
 
 def override_route(messages: list) -> str | None:
     """
