@@ -90,7 +90,7 @@ Appends a small, unobtrusive footer to every model response revealing which expe
 Example output (with default settings):
 ```
 ---
-🧠 Routed to: **programador** (confidence: 87%)
+ Routed to: **programador** (confidence: 87%)
 ```
 
 All behaviour is controlled through `config.json` under the `routing_transparency` key:
@@ -102,7 +102,7 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
     "show_score":  true,
     "show_method": false,
     "separator":   "---",
-    "label":       "🧠 Routed to"
+    "label":       " Routed to"
   }
 }
 ```
@@ -113,7 +113,7 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
 | `show_score` | `true` | Whether to show the confidence percentage next to the expert name. |
 | `show_method` | `false` | Reserved for future use (will show embedding vs keyword). |
 | `separator` | `"---"` | Separator line printed immediately before the footer. Max 80 chars. |
-| `label` | `"🧠 Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
+| `label` | `" Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
 
 ## Installation
 
