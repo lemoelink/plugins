@@ -12,7 +12,7 @@ config.json keys (all optional, under "routing_transparency"):
   show_score   : bool   — whether to include the confidence score. Default: true.
   show_method  : bool   — whether to show how routing was resolved. Default: false.
   separator    : str    — separator line printed before the footer. Default: "---".
-  label        : str    — prefix text. Default: "🧠 Routed to".
+  label        : str    — prefix text. Default: " Routed to".
 
 Security notes:
   - The expert_label coming from the core has already been validated by the
@@ -47,7 +47,7 @@ def _load_config() -> dict:
         "show_score":  True,
         "show_method": False,
         "separator":   "---",
-        "label":       "🧠 Routed to",
+        "label":       " Routed to",
     }
     try:
         # Import here to avoid coupling at module load time
@@ -129,7 +129,7 @@ def after_generation(response: str, expert_label: str = "unknown") -> str:
 
         # --- Build footer ---------------------------------------------------
         sep = cfg.get("separator", "---")
-        lbl = cfg.get("label", "🧠 Routed to")
+        lbl = cfg.get("label", " Routed to")
 
         footer_parts = [f"\n\n{sep}", f"{lbl}: **{expert_label}**"]
 
