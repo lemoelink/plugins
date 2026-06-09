@@ -104,14 +104,23 @@ def override_route(messages: list) -> str | None:
     for msg in messages[-_MAX_MESSAGES:]:
         if not isinstance(msg, dict):
             continue
+        
+        # 1. Comprobación de formato Ollama: presencia de campo 'images'
+        images_field = msg.get("images")
+        if isinstance(images_field, list) and images_field:
+            app_logger.info(
+                f"image_router: imágenes detectadas en campo 'images' (Ollama), forzando enrutamiento a '{_EXPERT_LABEL}'."
+            )
+            return _EXPERT_LABEL
+
+        # 2. Comprobación de formato OpenAI: content es una lista con partes de imagen
         content = msg.get("content")
-        if not isinstance(content, list):
-            continue
-        for part in content[:_MAX_PARTS_PER_MSG]:
-            if _check_image_part(part):
-                app_logger.info(
-                    f"image_router: imagen detectada, forzando enrutamiento a '{_EXPERT_LABEL}'."
-                )
-                return _EXPERT_LABEL
+        if isinstance(content, list):
+            for part in content[:_MAX_PARTS_PER_MSG]:
+                if _check_image_part(part):
+                    app_logger.info(
+                        f"image_router: imagen detectada en parte de contenido (OpenAI), forzando enrutamiento a '{_EXPERT_LABEL}'."
+                    )
+                    return _EXPERT_LABEL
 
     return None
