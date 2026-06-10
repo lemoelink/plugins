@@ -21,6 +21,7 @@ Plugins hook into the request lifecycle at three points:
 | [system_time.py](./system_time.py) | `override_route` | Injects the current local date and time as a system message at the start of every conversation, so the model is always aware of when the request is happening. |
 | [user_profile.py](./user_profile.py) | `override_route` | Injects user profile data (name, preferences, custom instructions) as a system message so experts can personalise their responses accordingly. |
 | [image_router.py](./image_router.py) | `override_route` | Detects images in the message history (inline base64 data-URIs or external URLs) and forces routing to a configured vision expert (LLaVA, GPT-4o, etc.). |
+| [paperless_search.py](./paperless_search.py) | `override_route` | Integrates with local Paperless-ngx instances using the local LEMoEppc classifier to retrieve and inject document contexts. |
 | [routing_transparency.py](./routing_transparency.py) | `after_generation` | Appends a small footer to each response showing which expert was used and the router's confidence score. Makes the MoE routing visible and trustworthy to end users. |
 
 ## Plugin details
@@ -90,7 +91,7 @@ Appends a small, unobtrusive footer to every model response revealing which expe
 Example output (with default settings):
 ```
 ---
- Routed to: **programador** (confidence: 87%)
+🧠 Routed to: **programador** (confidence: 87%)
 ```
 
 All behaviour is controlled through `config.json` under the `routing_transparency` key:
@@ -102,7 +103,7 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
     "show_score":  true,
     "show_method": false,
     "separator":   "---",
-    "label":       " Routed to"
+    "label":       "🧠 Routed to"
   }
 }
 ```
@@ -113,7 +114,39 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
 | `show_score` | `true` | Whether to show the confidence percentage next to the expert name. |
 | `show_method` | `false` | Reserved for future use (will show embedding vs keyword). |
 | `separator` | `"---"` | Separator line printed immediately before the footer. Max 80 chars. |
-| `label` | `" Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
+| `label` | `"🧠 Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
+
+---
+
+### paperless_search
+
+Integrates your local Paperless-ngx document manager with l3mcore. It detects document-related search requests using the local LEMoEppc classifier, cleans and distills the search queries using lemoe-query-distiller, queries your Paperless-ngx instance, injects the document text and metadata into the context window, and routes the conversation to the document-expert.
+
+It uses the exclude_words list to filter out creative or formatting requests (such as "create a template of...", "write an invoice...") to avoid false positive matches and privacy leaks.
+
+Configuration is defined in config.json under the paperless_search key:
+
+```json
+{
+  "paperless_search": {
+    "paperless_url": "http://127.0.0.1:8000",
+    "paperless_token": "your_api_token_here",
+    "use_semantic_router": true,
+    "similarity_threshold": 0.45,
+    "max_results": 3,
+    "exclude_words": ["crea", "inventa", "plantilla", "ficticia", "haz"]
+  }
+}
+```
+
+| Key | Default | Description |
+|---|---|---|
+| `paperless_url` | `""` | The URL of your local Paperless-ngx instance. |
+| `paperless_token` | `""` | The API token generated in the Paperless-ngx administrator panel. |
+| `use_semantic_router` | `true` | When true, uses the local classification model to detect query intent. |
+| `similarity_threshold` | `0.45` | Minimum score threshold for intent classification. |
+| `max_results` | `3` | Maximum number of relevant documents to inject into the LLM context. |
+| `exclude_words` | `[]` | List of words that immediately cancel Paperless routing when found in the user prompt. |
 
 ## Installation
 
@@ -128,3 +161,5 @@ Plugin filenames must contain only letters, numbers, hyphens and underscores (`^
 - [Plugin system documentation (ES)](https://docs.lemoe.link/avanzado/plugins)
 - [image_router plugin (EN)](https://docs.lemoe.link/en/avanzado/plugin-image-router)
 - [image_router plugin (ES)](https://docs.lemoe.link/avanzado/plugin-image-router)
+- [paperless_search plugin (EN)](https://docs.lemoe.link/en/avanzado/plugin-paperless-search)
+- [paperless_search plugin (ES)](https://docs.lemoe.link/avanzado/plugin-paperless-search)
