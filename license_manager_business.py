@@ -58,9 +58,7 @@ class LicenseManager:
             return
 
         if not os.path.exists(LICENSE_FILE):
-            if app_logger:
-                app_logger.warning(f"license_manager: License file {LICENSE_FILE} not found.")
-            self._handle_failure()
+            # No license file present: standard open-source mode, exit silently.
             return
 
         try:
@@ -151,6 +149,7 @@ class LicenseManager:
         self.load_business_plugins()
 
     def _handle_failure(self):
+        """Called only when a license file exists but validation failed (expired, revoked, etc.)."""
         self.is_valid = False
         now = datetime.now(timezone.utc)
         
