@@ -6,12 +6,13 @@ Community and official plugins for [l3mcore](https://github.com/lemoelink/l3mcor
 
 A plugin is a single Python file placed in the `plugins/` directory of your l3mcore installation. l3mcore loads it automatically at startup with no configuration required.
 
-Plugins hook into the request lifecycle at three points:
+Plugins hook into the request lifecycle at four points:
 
 | Hook | Signature | When it runs |
 |---|---|---|
 | `override_route` | `(messages: list) -> str \| None` | Before semantic routing. Return an expert label to force a route, or `None` to let the router decide. |
 | `before_routing` | `(prompt: str) -> str` | After override check, before the embedding model runs. Modify or filter the prompt. |
+| `before_expert` | `(messages: list, expert_config: dict) -> None` | After routing, immediately before dispatching to the expert backend. Mutate the message list in-place. |
 | `after_generation` | `(response: str) -> str` | After the expert generates a response, before it is returned to the client. |
 
 ## Available plugins
@@ -21,8 +22,9 @@ Plugins hook into the request lifecycle at three points:
 | [system_time.py](./system_time.py) | `override_route` | Injects the current local date and time as a system message at the start of every conversation, so the model is always aware of when the request is happening. |
 | [user_profile.py](./user_profile.py) | `override_route` | Injects user profile data (name, preferences, custom instructions) as a system message so experts can personalise their responses accordingly. |
 | [image_router.py](./image_router.py) | `override_route` | Detects images in the message history (inline base64 data-URIs or external URLs) and forces routing to a configured vision expert (LLaVA, GPT-4o, etc.). |
-| [paperless_search.py](./paperless_search.py) | `override_route` | Integrates with local Paperless-ngx instances using the local LEMoEppc classifier to retrieve and inject document contexts. |
-| [routing_transparency.py](./routing_transparency.py) | `after_generation` | Appends a small footer to each response showing which expert was used and the router's confidence score. Makes the MoE routing visible and trustworthy to end users. |
+| [routing_transparency.py](./routing_transparency.py) | `after_generation` | Appends a small footer to each response showing which expert was used and the router confidence score. Makes the MoE routing visible and trustworthy to end users. |
+| [pii_masker.py](./pii_masker.py) | `before_expert` | Detects and masks Personally Identifiable Information (DNI, IBAN, credit cards, emails, phone numbers, IPs, GPS coordinates) before the request reaches an external API backend. Uses regex patterns by default; optionally integrates spaCy NER for person names. |
+| [telemetry_dashboard.py](./telemetry_dashboard.py) | `after_generation` | Exposes a real-time web dashboard on port `8081` with per-expert metrics: requests, token usage (input/output), average latency, API cost estimation in USD, and global success rate. Data persists in `logs/telemetry.json` and is exportable as CSV. |
 
 ## Plugin details
 
@@ -86,12 +88,12 @@ The plugin also enforces a hard pre-regex length cap of 10 MB on any URL string 
 
 ### routing_transparency
 
-Appends a small, unobtrusive footer to every model response revealing which expert handled the request and the router's confidence.
+Appends a small, unobtrusive footer to every model response revealing which expert handled the request and the router confidence.
 
 Example output (with default settings):
 ```
 ---
-🧠 Routed to: **programador** (confidence: 87%)
+Routed to: **programador** (confidence: 87%)
 ```
 
 All behaviour is controlled through `config.json` under the `routing_transparency` key:
@@ -103,7 +105,7 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
     "show_score":  true,
     "show_method": false,
     "separator":   "---",
-    "label":       "🧠 Routed to"
+    "label":       "Routed to"
   }
 }
 ```
@@ -114,39 +116,55 @@ All behaviour is controlled through `config.json` under the `routing_transparenc
 | `show_score` | `true` | Whether to show the confidence percentage next to the expert name. |
 | `show_method` | `false` | Reserved for future use (will show embedding vs keyword). |
 | `separator` | `"---"` | Separator line printed immediately before the footer. Max 80 chars. |
-| `label` | `"🧠 Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
+| `label` | `"Routed to"` | Prefix text displayed before the expert name. Max 60 chars. |
 
 ---
 
-### paperless_search
+### pii_masker
 
-Integrates your local Paperless-ngx document manager with l3mcore. It detects document-related search requests using the local LEMoEppc classifier, cleans and distills the search queries using lemoe-query-distiller, queries your Paperless-ngx instance, injects the document text and metadata into the context window, and routes the conversation to the document-expert.
-
-It uses the exclude_words list to filter out creative or formatting requests (such as "create a template of...", "write an invoice...") to avoid false positive matches and privacy leaks.
-
-Configuration is defined in config.json under the paperless_search key:
+Detects and redacts Personally Identifiable Information from messages before they are sent to external API backends (type `api`). By default runs only for cloud experts to avoid unnecessary processing for local models. Can be forced to run for all experts via `force_enabled`.
 
 ```json
 {
-  "paperless_search": {
-    "paperless_url": "http://127.0.0.1:8000",
-    "paperless_token": "your_api_token_here",
-    "use_semantic_router": true,
-    "similarity_threshold": 0.45,
-    "max_results": 3,
-    "exclude_words": ["crea", "inventa", "plantilla", "ficticia", "haz"]
+  "pii_masker": {
+    "enabled": true,
+    "use_spacy": false,
+    "spacy_model": "es_core_news_sm",
+    "mask_names": false,
+    "force_enabled": false
   }
 }
 ```
 
 | Key | Default | Description |
 |---|---|---|
-| `paperless_url` | `""` | The URL of your local Paperless-ngx instance. |
-| `paperless_token` | `""` | The API token generated in the Paperless-ngx administrator panel. |
-| `use_semantic_router` | `true` | When true, uses the local classification model to detect query intent. |
-| `similarity_threshold` | `0.45` | Minimum score threshold for intent classification. |
-| `max_results` | `3` | Maximum number of relevant documents to inject into the LLM context. |
-| `exclude_words` | `[]` | List of words that immediately cancel Paperless routing when found in the user prompt. |
+| `enabled` | `true` | Master on/off switch. |
+| `use_spacy` | `false` | Enables spaCy NER for person name and location detection. Requires a spaCy model to be installed. |
+| `spacy_model` | `"es_core_news_sm"` | The spaCy model to load when `use_spacy` is `true`. |
+| `mask_names` | `false` | When `true` and `use_spacy` is enabled, replaces detected person names with `[PERSON_NAME]` and locations with `[LOCATION]`. |
+| `force_enabled` | `false` | When `true`, applies masking even for non-API (local) experts. |
+
+Built-in patterns (no extra dependencies): DNI/NIE, IBAN, credit card numbers, Spanish Social Security numbers, email addresses, Spanish phone numbers, IPv4 addresses, and GPS coordinates.
+
+---
+
+### telemetry_dashboard
+
+Exposes a real-time web dashboard for monitoring expert performance. A lightweight Flask server starts in the background on port `8081` (independent of the main API server).
+
+Dashboard URL: `http://localhost:8081`
+
+Features:
+- KPI cards: total requests, total API cost, tokens processed, global success rate.
+- Hourly bar chart for the last 24 hours.
+- Cost distribution doughnut chart per expert.
+- Per-expert table with requests, token counts (input/output), throughput (T/s), average latency, and estimated USD cost.
+- CSV export via `GET /api/export`.
+- Data persists in `logs/telemetry.json` using atomic writes.
+
+Cost estimation is only calculated for experts of type `api`. The internal price table covers GPT-4o, GPT-4o-mini, GPT-4-turbo, GPT-3.5-turbo, Claude 3.5 Sonnet, Claude 3 Haiku, Gemini 1.5 Pro, Gemini 1.5 Flash, and Gemini 2.0 Flash. The table can be extended by editing the `_COST_PER_1M` dictionary inside the plugin file.
+
+No configuration in `config.json` is required. The dashboard starts automatically when the plugin is loaded.
 
 ## Installation
 
@@ -157,9 +175,7 @@ Plugin filenames must contain only letters, numbers, hyphens and underscores (`^
 
 ## Documentation
 
-- [Plugin system documentation (EN)](https://docs.lemoe.link/en/avanzado/plugins)
-- [Plugin system documentation (ES)](https://docs.lemoe.link/avanzado/plugins)
-- [image_router plugin (EN)](https://docs.lemoe.link/en/avanzado/plugin-image-router)
-- [image_router plugin (ES)](https://docs.lemoe.link/avanzado/plugin-image-router)
-- [paperless_search plugin (EN)](https://docs.lemoe.link/en/avanzado/plugin-paperless-search)
-- [paperless_search plugin (ES)](https://docs.lemoe.link/avanzado/plugin-paperless-search)
+- [Plugin system documentation](https://docs.lemoe.link/avanzado/plugins)
+- [image_router plugin](https://docs.lemoe.link/avanzado/plugin-image-router)
+- [routing_transparency plugin](https://docs.lemoe.link/avanzado/plugin-routing-transparency)
+- [pii_masker plugin](https://docs.lemoe.link/avanzado/plugin-pii-masker)
